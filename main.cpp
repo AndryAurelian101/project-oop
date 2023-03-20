@@ -180,198 +180,207 @@ void winner(player score1_, player score2_, sf::RenderWindow& win_window, const 
     win_window.display();
 }
 
-
-int main() {
-    int i = 0;
-    int j = 0;
-    int t = 0;
-    bool mouse_pressed = false;
-    bool end = false;
+class game{
+    sf::RenderWindow window;
     player sc1{0, "Joe"}, sc2{0, "Garry"};
     sf::CircleShape circle1, circle2, circle3, circle4, circle5;
     dart dr1{0, 0, "basic"}, dr2{0, 0, "basic"};
     circle c1{circle1, 400.f, 10.f, 45.f, sf::Color(0, 0, 0)}, c2{circle2, 300.f, 110.f, 145.f, sf::Color(255, 255, 255)}, c3{circle3, 200.f, 210.f, 245.f, sf::Color(0, 0, 0)}, c4{ circle4,100.f, 310.f, 345.f, sf::Color(255, 255, 255)}, c5{ circle5,50.f, 360.f, 395.f,sf::Color(250, 50, 50)};
-    sf::RenderWindow window(sf::VideoMode(1200, 900), "Darts Game", sf::Style::Titlebar | sf::Style::Close);
-    window.setMouseCursorVisible(false);
-    sf::View fixed = window.getView();
     sf::Texture crosshair;
-    crosshair.loadFromFile("crosshair_small_2.png");
-    sf::Sprite mouse_sprite(crosshair);
-
-    sf::Font font;
-    if (!font.loadFromFile("Roboto-Black.ttf"))
-    {
-        // error...
-    }
-    sf::Text text;
-
-    // select the font
-    text.setFont(font); // font is a sf::Font
-
-    // set the string to display
-    text.setString("Score:");
-
-    // set the character size
-    text.setCharacterSize(44); // in pixels
-
-    // set the color
-    text.setFillColor(sf::Color::Black);
-
-    text.setPosition(900.f,70.f);
-
     sf::Text player_1;
-    player_1.setFont(font);
-    player_1.setString("Player1:");
-    player_1.setCharacterSize(44); // in pixels
-    player_1.setFillColor(sf::Color::Black);
-    player_1.setPosition(900.f,170.f);
-
     sf::Text player_2;
-    player_2.setFont(font);
-    player_2.setString("Player2:");
-    player_2.setCharacterSize(44); // in pixels
-    player_2.setFillColor(sf::Color::Black);
-    player_2.setPosition(900.f,240.f);
+    sf::Text score1;
+    sf::Text score2;
+    sf::Text text;
+    sf::Sprite mouse_sprite;
+    sf::Font font;
 
-    c1.set_circle();
-    c2.set_circle();
-    c3.set_circle();
-    c4.set_circle();
-    c5.set_circle();
+public:
+    game(){
 
-    sf::Text score1(toString(sc1.get_score()), font);
-    sf::Text score2(toString(sc2.get_score()), font);
+        window.create(sf::VideoMode(1200, 900), "Darts Game", sf::Style::Titlebar | sf::Style::Close);
+        window.setMouseCursorVisible(false);
 
-    score1.setCharacterSize(44); // in pixels
-    score1.setFillColor(sf::Color::Black);
-    score1.setPosition(1090.f,170.f);
-    score2.setCharacterSize(44); // in pixels
-    score2.setFillColor(sf::Color::Black);
-    score2.setPosition(1090.f,240.f);
+        crosshair.loadFromFile("crosshair_small_2.png");
+        mouse_sprite.setTexture(crosshair);
 
-    while (window.isOpen()){
+        if (!font.loadFromFile("Roboto-Black.ttf"))
+        {
+            // error...
+        }
 
-        sf::Event event{};
-        window.setFramerateLimit(60);
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
-                window.close();
-            if(!end){
-                if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed && j == 0) {
-                    mouse_pressed = true;
-                    sf::Vector2i localPosition = sf::Mouse::getPosition(window);
-                    // transform the mouse position from window coordinates to world coordinates
-                    sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+        // select the font
+        text.setFont(font); // font is a sf::Font
 
-                    sc1.update_Score(get_points(bound_setter(mouse)));
-                    score1.setString(toString(sc1.get_score()));
-                    i++;
-                    j++;
+        // set the string to display
+        text.setString("Score:");
 
-                    std::cout << localPosition.x << "\n";
-                    std::cout << localPosition.y << "\n";
-                    std::cout << "______________\n";
+        // set the character size
+        text.setCharacterSize(44); // in pixels
+
+        // set the color
+        text.setFillColor(sf::Color::Black);
+
+        text.setPosition(900.f,70.f);
+
+        player_1.setFont(font);
+        player_1.setString("Player1:");
+        player_1.setCharacterSize(44); // in pixels
+        player_1.setFillColor(sf::Color::Black);
+        player_1.setPosition(900.f,170.f);
+
+        player_2.setFont(font);
+        player_2.setString("Player2:");
+        player_2.setCharacterSize(44); // in pixels
+        player_2.setFillColor(sf::Color::Black);
+        player_2.setPosition(900.f,240.f);
+
+        c1.set_circle();
+        c2.set_circle();
+        c3.set_circle();
+        c4.set_circle();
+        c5.set_circle();
+
+
+        score1.setFont(font);
+        score2.setFont(font);
+        score1.setString(toString(sc1.get_score()));
+        score2.setString(toString(sc2.get_score()));
+
+        score1.setCharacterSize(44); // in pixels
+        score1.setFillColor(sf::Color::Black);
+        score1.setPosition(1090.f,170.f);
+        score2.setCharacterSize(44); // in pixels
+        score2.setFillColor(sf::Color::Black);
+        score2.setPosition(1090.f,240.f);
+
+    }
+    void run(){
+        int i = 0;
+        int j = 0;
+        int t = 0;
+        bool mouse_pressed = false;
+        int end = 0;
+        while (window.isOpen()){
+            sf::Event event{};
+            sf::View fixed = window.getView();
+            window.setFramerateLimit(60);
+            while (window.pollEvent(event)) {
+                if (event.type == sf::Event::Closed)
+                    window.close();
+                if(end == 0){
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed && j == 0) {
+                        mouse_pressed = true;
+                        sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+                        // transform the mouse position from window coordinates to world coordinates
+                        sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+                        sc1.update_Score(get_points(bound_setter(mouse)));
+                        score1.setString(toString(sc1.get_score()));
+                        i++;
+                        j++;
+                        std::cout<<i<<" "<<j<<"\n";
+
+                        std::cout << localPosition.x << "\n";
+                        std::cout << localPosition.y << "\n";
+                        std::cout << "______________\n";
+
+                    }
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed && j == 1 && t == 0) {
+                        mouse_pressed = true;
+                        sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+                        // transform the mouse position from window coordinates to world coordinates
+                        sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+                        sc1.update_Score(get_points(bound_setter(mouse)));
+                        score1.setString(toString(sc1.get_score()));
+                        i++;
+                        j++;
+                        t++;
+                        std::cout<<i<<" "<<j<<" "<<t<<"\n";
+
+                        std::cout << localPosition.x << "\n";
+                        std::cout << localPosition.y << "\n";
+                        std::cout << "______________\n";
+
+                    }
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed && j == 1 && t == 1) {
+                        mouse_pressed = true;
+                        sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+                        // transform the mouse position from window coordinates to world coordinates
+                        sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+                        sc2.update_Score(get_points(bound_setter(mouse)));
+                        score2.setString(toString(sc2.get_score()));
+                        i++;
+                        j--;
+                        t--;
+                        std::cout<<i<<" "<<j<<" "<<t<<"\n";
+
+                        std::cout << localPosition.x << "\n";
+                        std::cout << localPosition.y << "\n";
+                        std::cout << "______________\n";
+
+                    }
+
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed && j == 2) {
+                        mouse_pressed = true;
+                        sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+                        // transform the mouse position from window coordinates to world coordinates
+                        sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+                        sc2.update_Score(get_points(bound_setter(mouse)));
+                        score2.setString(toString(sc2.get_score()));
+                        i++;
+                        j--;
+                        std::cout<<i<<" "<<j<<"\n";
+
+
+                        std::cout << localPosition.x << "\n";
+                        std::cout << localPosition.y << "\n";
+                        std::cout << "______________\n";
+
+                    }
+
+                    if (!sf::Mouse::isButtonPressed(sf::Mouse::Left))
+                        mouse_pressed = false;
+                }
+                if  (i==12)
+                    end = 1;
+
+                //draw loop
+                switch (end) {
+                    case 0:
+                        window.clear(sf::Color::White);
+                        window.setView(fixed);
+                        window.draw(text);
+                        window.draw(score1);
+                        window.draw(score2);
+                        window.draw(player_1);
+                        window.draw(player_2);
+                        c1.draw_circle(window);
+                        c2.draw_circle(window);
+                        c3.draw_circle(window);
+                        c4.draw_circle(window);
+                        c5.draw_circle(window);
+                        mouse_sprite.setPosition(static_cast<sf::Vector2f>(sf::Mouse::getPosition(window)));
+                        window.draw(mouse_sprite);
+                        window.display();
+                        break;
+                    case 1:
+                        winner(sc1,sc2,window,font);
+                        break;
 
                 }
-                if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed && j == 1 && t == 0) {
-                    mouse_pressed = true;
-                    sf::Vector2i localPosition = sf::Mouse::getPosition(window);
-                    // transform the mouse position from window coordinates to world coordinates
-                    sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-
-                    sc1.update_Score(get_points(bound_setter(mouse)));
-                    score1.setString(toString(sc1.get_score()));
-                    i++;
-                    j++;
-                    t++;
-
-                    std::cout << localPosition.x << "\n";
-                    std::cout << localPosition.y << "\n";
-                    std::cout << "______________\n";
-
-                }
-                if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed && j == 1 && t == 1) {
-                    mouse_pressed = true;
-                    sf::Vector2i localPosition = sf::Mouse::getPosition(window);
-                    // transform the mouse position from window coordinates to world coordinates
-                    sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-
-                    sc2.update_Score(get_points(bound_setter(mouse)));
-                    score2.setString(toString(sc2.get_score()));
-                    i++;
-                    j--;
-                    t--;
-
-                    std::cout << localPosition.x << "\n";
-                    std::cout << localPosition.y << "\n";
-                    std::cout << "______________\n";
-
-                }
-
-                if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed && j == 2) {
-                    mouse_pressed = true;
-                    sf::Vector2i localPosition = sf::Mouse::getPosition(window);
-                    // transform the mouse position from window coordinates to world coordinates
-                    sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-
-                    sc2.update_Score(get_points(bound_setter(mouse)));
-                    score2.setString(toString(sc2.get_score()));
-                    i++;
-                    j--;
-
-
-                    std::cout << localPosition.x << "\n";
-                    std::cout << localPosition.y << "\n";
-                    std::cout << "______________\n";
-
-                }
-                if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed) {
-                    mouse_pressed = true;
-                    sf::Vector2i localPosition = sf::Mouse::getPosition(window);
-                    // transform the mouse position from window coordinates to world coordinates
-                    sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-
-                    sc2.update_Score(get_points(bound_setter(mouse)));
-                    score2.setString(toString(sc1.get_score()));
-                    i++;
-                    j--;
-
-
-                    std::cout << localPosition.x << "\n";
-                    std::cout << localPosition.y << "\n";
-                    std::cout << "______________\n";
-
-                }
-                if (!sf::Mouse::isButtonPressed(sf::Mouse::Left))
-                    mouse_pressed = false;
-            }
-            if  (i==12)
-                end = true;
-            //draw loop
-            switch (end) {
-                case false:
-                    window.clear(sf::Color::White);
-                    window.setView(fixed);
-                    window.draw(text);
-                    window.draw(score1);
-                    window.draw(score2);
-                    window.draw(player_1);
-                    window.draw(player_2);
-                    c1.draw_circle(window);
-                    c2.draw_circle(window);
-                    c3.draw_circle(window);
-                    c4.draw_circle(window);
-                    c5.draw_circle(window);
-                    mouse_sprite.setPosition(static_cast<sf::Vector2f>(sf::Mouse::getPosition(window)));
-                    window.draw(mouse_sprite);
-                    window.display();
-                    break;
-                case true:
-                    winner(sc1,sc2,window,font);
-                    break;
             }
         }
     }
+};
+
+int main() {
+
+   game darts;
+   darts.run();
 
     return 0;
 }
