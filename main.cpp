@@ -1,30 +1,38 @@
+#include <sstream>
+#include <string>
+#include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
 #include <iostream>
+#include <cmath>
 #include <utility>
 
 
-class score {
+template <typename T>
+std::string toString(T arg)
+{
+    std::stringstream ss;
+    ss << arg;
+    return ss.str();
+}
+
+
+class player {
     int player_score;
     std::string player_name;
 public:
-    score(int player_score_, std::string player) : player_score{player_score_}, player_name{std::move(player)} {}
+    player(int player_score_, std::string player) : player_score{player_score_}, player_name{std::move(player)} {}
 
-    score(const score& other)= default;
+    player(const player& other)= default;
 
-    score(score&& other) noexcept : player_score{other.player_score}, player_name{std::move(other.player_name)}{}
+    player(player&& other) noexcept : player_score{other.player_score}, player_name{std::move(other.player_name)}{}
 
-    score& operator= (score&& other) noexcept {
+    player& operator= (player&& other) noexcept {
         player_score = other.player_score;
         player_name = std::move(other.player_name);
         return *this;
     }
 
-    ~score()= default;
-
-    void get_name(int j) {
-        std::cout << "Player"<< j << ":";
-        std::cin >> player_name;
-
-    }
+    ~player()= default;
 
     void update_Score(int hit_score) {
         player_score = player_score + hit_score;
@@ -38,39 +46,35 @@ public:
         return player_name;
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const score& st) {
+    friend std::ostream& operator<<(std::ostream& os, const player& st) {
         os << "Nume: " << st.player_name << ", scor: " << st.player_score << "\n";
         return os;
     }
 };
 
-class board_space {
-    int value;
-    int x;
-    int y;
-public:
-    board_space(int ival, int x_, int y_) : value{ival}, x{x_}, y{y_} {}
 
-    int get_points() {
-        if (x >= 0 && x <= 8 && y >= 0 && y <= 8){
-            std::cout << "Ai lovit pozitia " << x << " "<< y << "!\n";
-            std::cout << "Ai obtinut " << value << " puncte!\n";
-        }
-        else {
-            std::cout << "Ai dat afara!\n";
-            std::cout << "Ai obtinut 0 puncte!\n";
-            value = 0;
-        }
-
-        return value;
+int get_points(int bound) {
+    switch (bound) {
+        case 1:
+            std::cout << "Circle1 is pressed!\n";
+            return 5;
+        case 2:
+            std::cout << "Circle2 is pressed!\n";
+            return 10;
+        case 3:
+            std::cout << "Circle3 is pressed!\n";
+            return 15;
+        case 4:
+            std::cout << "Circle4 is pressed!\n";
+            return 25;
+        case 5:
+            std::cout << "Circle5 is pressed!\n";
+            return 50;
+        default:
+            std::cout << "Afara!\n";
+            return 0;
     }
-
-    friend std::ostream& operator<<(std::ostream& os, const board_space& st) {
-        os << "Puncte: " << st.value << ", positie: " << st.x <<" "<< st.y<< "\n";
-        return os;
-    }
-
-};
+}
 
 class dart {
     int position_x;
@@ -79,30 +83,6 @@ class dart {
 public:
     dart(int position_x_, int position_y_, std::string dart_type_) : position_x{position_x_}, position_y{position_y_}, dart_type(std::move(dart_type_)) {}
 
-    void get_position() {
-        std::cout << "Introduce-ti pozitia darts-ului:" << std::endl;
-        std::cout << "x:";
-        std::cin >> position_x;
-        if (position_x < 0 || position_x > 8)
-        {
-            position_x = 9;
-        }
-        std::cout << "y:";
-        std::cin >> position_y;
-        if (position_x < 0 || position_x > 8)
-        {
-            position_x = 9;
-        }
-
-    }
-
-    [[nodiscard]] int get_x() const {
-        return position_x;
-    }
-
-    [[nodiscard]] int get_y() const {
-        return position_y;
-    }
 
     friend std::ostream& operator<<(std::ostream& os, const dart& st) {
         os << "Positie: " << st.position_x << " " << st.position_y << "\n";
@@ -111,56 +91,287 @@ public:
 
 };
 
-void winner(score score1_, score score2_) {
+class circle {
+    sf::CircleShape& circle_name;
+    float radius;
+    float x_position;
+    float y_position;
+    sf::Color circle_color;
+
+public:
+    circle(sf::CircleShape& circle_name_, float r, float x, float y, sf::Color col): circle_name{circle_name_}, radius{r}, x_position{x}, y_position{y}, circle_color{col}{
+
+    }
+
+    void set_circle(){
+        circle_name.setRadius(radius);
+        circle_name.setPosition(x_position, y_position);
+        circle_name.setFillColor(circle_color);
+
+    }
+
+    void draw_circle(sf::RenderWindow& window_){
+        window_.draw(circle_name);
+    }
+
+};
+
+int bound_setter(sf::Vector2f mouse_vector){
+        int bound_set = 0;
+        double distance = sqrt(pow(mouse_vector.x - 395,2)+ pow(mouse_vector.y - 430,2));
+        if (distance >= -400 && distance <= 400) {
+            bound_set = 1;
+        }
+        if (distance >= -300 && distance <= 300)  {
+            bound_set = 2;
+        }
+        if (distance >= -200 && distance <= 200)  {
+            bound_set = 3;
+        }
+        if (distance >= -100 && distance <= 100)  {
+            bound_set = 4;
+        }
+        if (distance >= -50 && distance <= 50)  {
+            bound_set = 5;
+        }
+    return bound_set;
+}
+
+void winner(player score1_, player score2_, sf::RenderWindow& win_window, const sf::Font& font) {
+
+    sf::Text player_2_win;
+    player_2_win.setFont(font);
+    player_2_win.setString("Player2 WON!");
+    player_2_win.setCharacterSize(44); // in pixels
+    player_2_win.setFillColor(sf::Color::White);
+    player_2_win.setPosition(300.f,340.f);
+
+    sf::Text player_1_win;
+    player_1_win.setFont(font);
+    player_1_win.setString("Player1 WON!");
+    player_1_win.setCharacterSize(44); // in pixels
+    player_1_win.setFillColor(sf::Color::White);
+    player_1_win.setPosition(300.f,340.f);
+
+    sf::Text Tie;
+    Tie.setFont(font);
+    Tie.setString("Tie");
+    Tie.setCharacterSize(44); // in pixels
+    Tie.setFillColor(sf::Color::White);
+    Tie.setPosition(300.f,340.f);
+    win_window.clear(sf::Color::Black);
     if (score1_.get_score() == score2_.get_score())
+    {
         std::cout << "Tie!";
+        win_window.draw(Tie);
+
+    }
     else if (score1_.get_score() < score2_.get_score())
+    {
         std::cout << score2_.get_player_name() << " wins!";
+        win_window.draw(player_2_win);
+
+    }
     else
+    {
         std::cout << score1_.get_player_name() << " wins!";
+        win_window.draw(player_1_win);
+    }
+    win_window.display();
 }
 
 
 int main() {
-    int i, j = 1;
-    score sc3{0, "Joe"}, sc4{0, "Garry"};
-    dart dr1{0,0, "basic"}, dr2{0,0, "basic"};
-    board_space a[] = {board_space(5,0,0),board_space(5,0,1), board_space(5,0,2), board_space(5,0,3), board_space(5,0,4), board_space(5,0,5), board_space(5,0,6), board_space(5,0,7), board_space(5,0,8), board_space(5,1,0),board_space(10,1,1), board_space(10,1,2), board_space(10,1,3), board_space(10,1,4), board_space(10,1,5), board_space(10,1,6), board_space(10,1,7), board_space(5,1,8), board_space(5,2,0),board_space(10,2,1), board_space(15,2,2), board_space(15,2,3), board_space(15,2,4), board_space(15,2,5), board_space(15,2,6), board_space(10,2,7), board_space(5,2,8), board_space(5,3,0),board_space(10,3,1), board_space(15,3,2), board_space(25,3,3), board_space(25,3,4), board_space(25,3,5), board_space(15,3,6), board_space(10,3,7), board_space(5,3,8), board_space(5,4,0),board_space(10,4,1), board_space(15,4,2), board_space(25,4,3), board_space(50,4,4), board_space(25,4,5), board_space(15,4,6), board_space(10,4,7), board_space(5,4,8), board_space(5,5,0),board_space(10,5,1), board_space(15,5,2), board_space(25,5,3), board_space(25,5,4), board_space(25,5,5), board_space(15,5,6), board_space(10,5,7), board_space(5,5,8), board_space(5,6,0),board_space(10,6,1), board_space(15,6,2), board_space(15,6,3), board_space(15,6,4), board_space(15,6,5), board_space(15,6,6), board_space(10,6,7), board_space(5,6,8), board_space(5,7,0),board_space(10,7,1), board_space(10,7,2), board_space(10,7,3), board_space(10,7,4), board_space(10,7,5), board_space(10,7,6), board_space(10,7,7), board_space(5,7,8), board_space(5,8,0),board_space(5,8,1), board_space(5,8,2), board_space(5,8,3), board_space(5,8,4), board_space(5,8,5), board_space(5,8,6), board_space(5,8,7), board_space(5,8,8) };
-    score sc1 = sc3;
-    score sc2 = sc4;
-    std::cout<<"Reguli: Jocul se joaca in 2 persoane\n";
-    std::cout<<"Sunt 3 runde\n";
-    std::cout<<"Tabla de darts este de dimensiunea 9X9\n";
-    std::cout<<"Fiecare jucator are 2 darts-uri pe runda. De fiecare data trebuie sa fie introdus un numar intre 0 si 8 odata pentru positia orizontala a darts-ului si apoi pentru pozitia verticala.\n";
-    std::cout<<"Jucatorul cu cele mai multe puncte la final castiga!\n\n";
-    sc1.get_name(j);
-    j++;
-    sc2.get_name(j);
-    for(i = 0; i< 2; i++)
+    int i = 0;
+    int j = 0;
+    int t = 0;
+    bool mouse_pressed = false;
+    bool end = false;
+    player sc1{0, "Joe"}, sc2{0, "Garry"};
+    sf::CircleShape circle1, circle2, circle3, circle4, circle5;
+    dart dr1{0, 0, "basic"}, dr2{0, 0, "basic"};
+    circle c1{circle1, 400.f, 10.f, 45.f, sf::Color(0, 0, 0)}, c2{circle2, 300.f, 110.f, 145.f, sf::Color(255, 255, 255)}, c3{circle3, 200.f, 210.f, 245.f, sf::Color(0, 0, 0)}, c4{ circle4,100.f, 310.f, 345.f, sf::Color(255, 255, 255)}, c5{ circle5,50.f, 360.f, 395.f,sf::Color(250, 50, 50)};
+    sf::RenderWindow window(sf::VideoMode(1200, 900), "Darts Game", sf::Style::Titlebar | sf::Style::Close);
+    window.setMouseCursorVisible(false);
+    sf::View fixed = window.getView();
+    sf::Texture crosshair;
+    crosshair.loadFromFile("crosshair_small_2.png");
+    sf::Sprite mouse_sprite(crosshair);
+
+    sf::Font font;
+    if (!font.loadFromFile("Roboto-Black.ttf"))
     {
-        dr1.get_position();
-        sc1.update_Score(a[dr1.get_x()*9 + dr1.get_y()].get_points());
-        dr2.get_position();
-        sc1.update_Score(a[dr2.get_x()*9 + dr2.get_y()].get_points());
-        std::cout << "Next player!\n";
-
-        dr1.get_position();
-        sc2.update_Score(a[dr1.get_x()*9 + dr1.get_y()].get_points());
-        dr2.get_position();
-        sc2.update_Score(a[dr2.get_x()*9 + dr2.get_y()].get_points());
-        std::cout << "Next player!\n";
+        // error...
     }
-    dr1.get_position();
-    sc1.update_Score(a[dr1.get_x()*9 + dr1.get_y()].get_points());
-    dr2.get_position();
-    sc1.update_Score(a[dr2.get_x()*9 + dr2.get_y()].get_points());
-    std::cout << "Next player!\n";
+    sf::Text text;
 
-    dr1.get_position();
-    sc2.update_Score(a[dr1.get_x()*9 + dr1.get_y()].get_points());
-    dr2.get_position();
-    sc2.update_Score(a[dr2.get_x()*9 + dr2.get_y()].get_points());
-    std::cout << sc1 << sc2;
-    winner(sc1,sc2);
+    // select the font
+    text.setFont(font); // font is a sf::Font
+
+    // set the string to display
+    text.setString("Score:");
+
+    // set the character size
+    text.setCharacterSize(44); // in pixels
+
+    // set the color
+    text.setFillColor(sf::Color::Black);
+
+    text.setPosition(900.f,70.f);
+
+    sf::Text player_1;
+    player_1.setFont(font);
+    player_1.setString("Player1:");
+    player_1.setCharacterSize(44); // in pixels
+    player_1.setFillColor(sf::Color::Black);
+    player_1.setPosition(900.f,170.f);
+
+    sf::Text player_2;
+    player_2.setFont(font);
+    player_2.setString("Player2:");
+    player_2.setCharacterSize(44); // in pixels
+    player_2.setFillColor(sf::Color::Black);
+    player_2.setPosition(900.f,240.f);
+
+    c1.set_circle();
+    c2.set_circle();
+    c3.set_circle();
+    c4.set_circle();
+    c5.set_circle();
+
+    sf::Text score1(toString(sc1.get_score()), font);
+    sf::Text score2(toString(sc2.get_score()), font);
+
+    score1.setCharacterSize(44); // in pixels
+    score1.setFillColor(sf::Color::Black);
+    score1.setPosition(1090.f,170.f);
+    score2.setCharacterSize(44); // in pixels
+    score2.setFillColor(sf::Color::Black);
+    score2.setPosition(1090.f,240.f);
+
+    while (window.isOpen()){
+
+        sf::Event event{};
+        window.setFramerateLimit(60);
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+            if(!end){
+                if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed && j == 0) {
+                    mouse_pressed = true;
+                    sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+                    // transform the mouse position from window coordinates to world coordinates
+                    sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+                    sc1.update_Score(get_points(bound_setter(mouse)));
+                    score1.setString(toString(sc1.get_score()));
+                    i++;
+                    j++;
+
+                    std::cout << localPosition.x << "\n";
+                    std::cout << localPosition.y << "\n";
+                    std::cout << "______________\n";
+
+                }
+                if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed && j == 1 && t == 0) {
+                    mouse_pressed = true;
+                    sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+                    // transform the mouse position from window coordinates to world coordinates
+                    sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+                    sc1.update_Score(get_points(bound_setter(mouse)));
+                    score1.setString(toString(sc1.get_score()));
+                    i++;
+                    j++;
+                    t++;
+
+                    std::cout << localPosition.x << "\n";
+                    std::cout << localPosition.y << "\n";
+                    std::cout << "______________\n";
+
+                }
+                if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed && j == 1 && t == 1) {
+                    mouse_pressed = true;
+                    sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+                    // transform the mouse position from window coordinates to world coordinates
+                    sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+                    sc2.update_Score(get_points(bound_setter(mouse)));
+                    score2.setString(toString(sc2.get_score()));
+                    i++;
+                    j--;
+                    t--;
+
+                    std::cout << localPosition.x << "\n";
+                    std::cout << localPosition.y << "\n";
+                    std::cout << "______________\n";
+
+                }
+
+                if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed && j == 2) {
+                    mouse_pressed = true;
+                    sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+                    // transform the mouse position from window coordinates to world coordinates
+                    sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+                    sc2.update_Score(get_points(bound_setter(mouse)));
+                    score2.setString(toString(sc2.get_score()));
+                    i++;
+                    j--;
+
+
+                    std::cout << localPosition.x << "\n";
+                    std::cout << localPosition.y << "\n";
+                    std::cout << "______________\n";
+
+                }
+                if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouse_pressed) {
+                    mouse_pressed = true;
+                    sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+                    // transform the mouse position from window coordinates to world coordinates
+                    sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+                    sc2.update_Score(get_points(bound_setter(mouse)));
+                    score2.setString(toString(sc1.get_score()));
+                    i++;
+                    j--;
+
+
+                    std::cout << localPosition.x << "\n";
+                    std::cout << localPosition.y << "\n";
+                    std::cout << "______________\n";
+
+                }
+                if (!sf::Mouse::isButtonPressed(sf::Mouse::Left))
+                    mouse_pressed = false;
+            }
+            if  (i==12)
+                end = true;
+            //draw loop
+            switch (end) {
+                case false:
+                    window.clear(sf::Color::White);
+                    window.setView(fixed);
+                    window.draw(text);
+                    window.draw(score1);
+                    window.draw(score2);
+                    window.draw(player_1);
+                    window.draw(player_2);
+                    c1.draw_circle(window);
+                    c2.draw_circle(window);
+                    c3.draw_circle(window);
+                    c4.draw_circle(window);
+                    c5.draw_circle(window);
+                    mouse_sprite.setPosition(static_cast<sf::Vector2f>(sf::Mouse::getPosition(window)));
+                    window.draw(mouse_sprite);
+                    window.display();
+                    break;
+                case true:
+                    winner(sc1,sc2,window,font);
+                    break;
+            }
+        }
+    }
+
     return 0;
 }
