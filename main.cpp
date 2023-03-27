@@ -61,9 +61,9 @@ public:
 
     player(player&& other) noexcept : player_score{other.player_score}, player_name{std::move(other.player_name)}{}
 
-    player& operator= (player&& other) noexcept {
+    player& operator= (const player& other) noexcept {
         player_score = other.player_score;
-        player_name = std::move(other.player_name);
+        player_name = other.player_name;
         return *this;
     }
 
