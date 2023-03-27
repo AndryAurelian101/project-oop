@@ -1,4 +1,3 @@
-#include <sstream>
 #include <string>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
@@ -7,14 +6,50 @@
 #include <utility>
 
 
-template <typename T>
-std::string toString(T arg)
-{
-    std::stringstream ss;
-    ss << arg;
-    return ss.str();
+int get_points(int bound) {
+    switch (bound) {
+        case 1:
+            std::cout << "Circle1 is pressed!\n";
+            return 5;
+        case 2:
+            std::cout << "Circle2 is pressed!\n";
+            return 10;
+        case 3:
+            std::cout << "Circle3 is pressed!\n";
+            return 15;
+        case 4:
+            std::cout << "Circle4 is pressed!\n";
+            return 25;
+        case 5:
+            std::cout << "Circle5 is pressed!\n";
+            return 50;
+        default:
+            std::cout << "Afara!\n";
+            return 0;
+    }
 }
 
+int bound_setter(sf::Vector2f mouse_vector){
+    int bound_set = 0;
+    //Functia de calculare a distantei de la coordonatele centrului (x:395;y:430)
+    double distance = sqrt(pow(mouse_vector.x - 395,2)+ pow(mouse_vector.y - 430,2));
+    if (distance >= -400 && distance <= 400) {
+        bound_set = 1;
+    }
+    if (distance >= -300 && distance <= 300)  {
+        bound_set = 2;
+    }
+    if (distance >= -200 && distance <= 200)  {
+        bound_set = 3;
+    }
+    if (distance >= -100 && distance <= 100)  {
+        bound_set = 4;
+    }
+    if (distance >= -50 && distance <= 50)  {
+        bound_set = 5;
+    }
+    return bound_set;
+}
 
 class player {
     int player_score;
@@ -51,30 +86,6 @@ public:
         return os;
     }
 };
-
-
-int get_points(int bound) {
-    switch (bound) {
-        case 1:
-            std::cout << "Circle1 is pressed!\n";
-            return 5;
-        case 2:
-            std::cout << "Circle2 is pressed!\n";
-            return 10;
-        case 3:
-            std::cout << "Circle3 is pressed!\n";
-            return 15;
-        case 4:
-            std::cout << "Circle4 is pressed!\n";
-            return 25;
-        case 5:
-            std::cout << "Circle5 is pressed!\n";
-            return 50;
-        default:
-            std::cout << "Afara!\n";
-            return 0;
-    }
-}
 
 class dart {
     int position_x;
@@ -115,70 +126,6 @@ public:
     }
 
 };
-
-int bound_setter(sf::Vector2f mouse_vector){
-        int bound_set = 0;
-        double distance = sqrt(pow(mouse_vector.x - 395,2)+ pow(mouse_vector.y - 430,2));
-        if (distance >= -400 && distance <= 400) {
-            bound_set = 1;
-        }
-        if (distance >= -300 && distance <= 300)  {
-            bound_set = 2;
-        }
-        if (distance >= -200 && distance <= 200)  {
-            bound_set = 3;
-        }
-        if (distance >= -100 && distance <= 100)  {
-            bound_set = 4;
-        }
-        if (distance >= -50 && distance <= 50)  {
-            bound_set = 5;
-        }
-    return bound_set;
-}
-
-void winner(player score1_, player score2_, sf::RenderWindow& win_window, const sf::Font& font) {
-
-    sf::Text player_2_win;
-    player_2_win.setFont(font);
-    player_2_win.setString("Player2 WON!");
-    player_2_win.setCharacterSize(44); // in pixels
-    player_2_win.setFillColor(sf::Color::White);
-    player_2_win.setPosition(300.f,340.f);
-
-    sf::Text player_1_win;
-    player_1_win.setFont(font);
-    player_1_win.setString("Player1 WON!");
-    player_1_win.setCharacterSize(44); // in pixels
-    player_1_win.setFillColor(sf::Color::White);
-    player_1_win.setPosition(300.f,340.f);
-
-    sf::Text Tie;
-    Tie.setFont(font);
-    Tie.setString("Tie");
-    Tie.setCharacterSize(44); // in pixels
-    Tie.setFillColor(sf::Color::White);
-    Tie.setPosition(300.f,340.f);
-    win_window.clear(sf::Color::Black);
-    if (score1_.get_score() == score2_.get_score())
-    {
-        std::cout << "Tie!";
-        win_window.draw(Tie);
-
-    }
-    else if (score1_.get_score() < score2_.get_score())
-    {
-        std::cout << score2_.get_player_name() << " wins!";
-        win_window.draw(player_2_win);
-
-    }
-    else
-    {
-        std::cout << score1_.get_player_name() << " wins!";
-        win_window.draw(player_1_win);
-    }
-    win_window.display();
-}
 
 class game{
     sf::RenderWindow window;
@@ -244,8 +191,8 @@ public:
 
         score1.setFont(font);
         score2.setFont(font);
-        score1.setString(toString(sc1.get_score()));
-        score2.setString(toString(sc2.get_score()));
+        score1.setString(std::to_string(sc1.get_score()));
+        score2.setString(std::to_string(sc2.get_score()));
 
         score1.setCharacterSize(44); // in pixels
         score1.setFillColor(sf::Color::Black);
@@ -255,6 +202,50 @@ public:
         score2.setPosition(1090.f,240.f);
 
     }
+
+    static void winner(player score1_, player score2_, sf::RenderWindow& win_window, const sf::Font& font) {
+
+        sf::Text player_2_win;
+        player_2_win.setFont(font);
+        player_2_win.setString("Player2 WON!");
+        player_2_win.setCharacterSize(44); // in pixels
+        player_2_win.setFillColor(sf::Color::White);
+        player_2_win.setPosition(300.f,340.f);
+
+        sf::Text player_1_win;
+        player_1_win.setFont(font);
+        player_1_win.setString("Player1 WON!");
+        player_1_win.setCharacterSize(44); // in pixels
+        player_1_win.setFillColor(sf::Color::White);
+        player_1_win.setPosition(300.f,340.f);
+
+        sf::Text Tie;
+        Tie.setFont(font);
+        Tie.setString("Tie");
+        Tie.setCharacterSize(44); // in pixels
+        Tie.setFillColor(sf::Color::White);
+        Tie.setPosition(300.f,340.f);
+        win_window.clear(sf::Color::Black);
+        if (score1_.get_score() == score2_.get_score())
+        {
+            std::cout << "Tie!";
+            win_window.draw(Tie);
+
+        }
+        else if (score1_.get_score() < score2_.get_score())
+        {
+            std::cout << score2_.get_player_name() << " wins!";
+            win_window.draw(player_2_win);
+
+        }
+        else
+        {
+            std::cout << score1_.get_player_name() << " wins!";
+            win_window.draw(player_1_win);
+        }
+        win_window.display();
+    }
+
     void run(){
         int i = 0;
         int j = 0;
@@ -276,7 +267,7 @@ public:
                         sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
                         sc1.update_Score(get_points(bound_setter(mouse)));
-                        score1.setString(toString(sc1.get_score()));
+                        score1.setString(std::to_string(sc1.get_score()));
                         i++;
                         j++;
                         std::cout<<i<<" "<<j<<"\n";
@@ -293,7 +284,7 @@ public:
                         sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
                         sc1.update_Score(get_points(bound_setter(mouse)));
-                        score1.setString(toString(sc1.get_score()));
+                        score1.setString(std::to_string(sc1.get_score()));
                         i++;
                         j++;
                         t++;
@@ -311,7 +302,7 @@ public:
                         sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
                         sc2.update_Score(get_points(bound_setter(mouse)));
-                        score2.setString(toString(sc2.get_score()));
+                        score2.setString(std::to_string(sc2.get_score()));
                         i++;
                         j--;
                         t--;
@@ -330,7 +321,7 @@ public:
                         sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
                         sc2.update_Score(get_points(bound_setter(mouse)));
-                        score2.setString(toString(sc2.get_score()));
+                        score2.setString(std::to_string(sc2.get_score()));
                         i++;
                         j--;
                         std::cout<<i<<" "<<j<<"\n";
